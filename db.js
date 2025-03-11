@@ -1,0 +1,31 @@
+const mongoose = require("mongoose");
+const { Schema, Types } = mongoose;
+
+
+const userSchema = new Schema({
+    googleId: { type: String, unique: true },
+    name: { type: String },
+    email: { type: String, unique: true, required: true },
+    password: { type: String, },
+}, { timestamps: true });
+
+
+const postSchema = new Schema({
+    title: { type: String, unique: true, required: true },
+    by: { type: Types.ObjectId, ref: 'users', required: true },
+    content: { type: String, minLength: 50, maxLength: 700, required: true },
+    image: { type: String, required: true },
+    likes: { type: Number, default: 0 }
+}, { timestamps: true });
+
+const commentSchema = new Schema({
+    by: { type: Types.ObjectId, required: true, ref: 'users' },
+    post: { type: Types.ObjectId, required: true, ref: 'posts' },
+    content: { type: String, required: true, maxLength: 300 }
+}, { timestamps: true })
+
+const userModel = mongoose.model('users', userSchema);
+const postModel = mongoose.model('posts', postSchema);
+const commentModel = mongoose.model('comments', commentSchema);
+
+module.exports = { userModel, postModel, commentModel };
