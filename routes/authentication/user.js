@@ -16,7 +16,6 @@ userRouter.post("/signUp", async function (req, res) {
     const userSchema = z.object({
         name: z.string().min(4, "Minimum length of username should be 4").max(25, "Maximum length should be 25"),
         email: z.string().email("not a valid email"),
-        mobile: z.string().min(10, "length of Mobile should be 10").max(10, "length of Mobile should be 10").regex(/^\d+$/, "Mobile number should contain only digits"),
         password: z.string().min(8, "Minimum Length should be 8").regex(/[A-Z]/, "should contain one capital letter").regex(/[0-9]/, "Should contain one numeric letter").regex(/[@#$%^&*]/, "should contain 1 special character"),
         confirmPassword: z.string()
     }).strict();

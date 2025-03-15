@@ -6,14 +6,14 @@ const userSchema = new Schema({
     googleId: { type: String, unique: true },
     name: { type: String },
     email: { type: String, unique: true, required: true },
-    password: { type: String, },
+    password: { type: String },
 }, { timestamps: true });
 
 
 const postSchema = new Schema({
-    title: { type: String, unique: true, required: true },
+    title: { type: String, unique: true, required: true, maxLength: 70 },
     by: { type: Types.ObjectId, ref: 'users', required: true },
-    content: { type: String, minLength: 50, maxLength: 700, required: true },
+    content: { type: String, minLength: 50, maxLength: 1000, required: true },
     image: { type: String, required: true },
     likes: { type: Number, default: 0 }
 }, { timestamps: true });

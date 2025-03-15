@@ -6,13 +6,15 @@ const blog = require("./routes/blogs/blog.js");
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use('/user', user);
 app.use('/', blog);
 
 
 
-app.listen(3001, () => {
-    mongoose.connect(process.env.connection);
+app.listen(3001, async () => {
+    await mongoose.connect(process.env.connection);
+
     console.log("Server Running on port 3001");
 })
