@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 require('dotenv').config()
 const user = require("./routes/authentication/user.js");
 const blog = require("./routes/blogs/blog.js");
+const comment = require("./routes/comments/comments.js")
 
 const app = express();
 app.use(express.json());
@@ -10,6 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/user', user);
 app.use('/', blog);
+app.use("/postComment", comment);
 
 
 

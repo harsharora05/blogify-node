@@ -3,8 +3,8 @@ const { Schema, Types } = mongoose;
 
 
 const userSchema = new Schema({
-    googleId: { type: String, unique: true },
     name: { type: String },
+    username: { type: String, unique: true, required: true },
     email: { type: String, unique: true, required: true },
     password: { type: String },
 }, { timestamps: true });
@@ -21,8 +21,19 @@ const postSchema = new Schema({
 const commentSchema = new Schema({
     by: { type: Types.ObjectId, required: true, ref: 'users' },
     post: { type: Types.ObjectId, required: true, ref: 'posts' },
-    content: { type: String, required: true, maxLength: 300 }
-}, { timestamps: true })
+    parentComment: { type: Types.ObjectId, default: null, ref: 'comments' },
+    content: { type: String, required: true, maxLength: 300 },
+    reply: [{ type: Types.ObjectId, ref: 'comments' }]
+}, { timestamps: true });
+
+commentSchema.pre("find", function (next) {
+    this.populate({
+        path: "reply",
+        populate: { path: "by" }
+    })
+    next()
+});
+
 
 const userModel = mongoose.model('users', userSchema);
 const postModel = mongoose.model('posts', postSchema);
