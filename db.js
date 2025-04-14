@@ -3,9 +3,11 @@ const { Schema, Types } = mongoose;
 
 
 const userSchema = new Schema({
+
     name: { type: String },
-    username: { type: String, unique: true, required: true },
-    email: { type: String, unique: true, required: true },
+    username: { type: String, unique: true },
+    mobile: { type: String, unique: true, maxLength: 10, minLength: 10 },
+    email: { type: String, unique: true },
     password: { type: String },
 }, { timestamps: true });
 

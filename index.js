@@ -9,9 +9,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/user', user);
-app.use('/', blog);
-app.use("/postComment", comment);
+app.use('/v1/user', user);
+app.use('/v1/', blog);
+app.use('/v1/postComment', comment);
 
 
 

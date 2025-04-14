@@ -106,6 +106,110 @@ userRouter.post("/signIn", async function (req, res) {
 
 
 
+/*
+Implemented Otp auth messagaing services using twilio only to understand ... But its paid So when in production we can add rate limiting,on a succesfull  verification  we can save this number to db and another route which will take username from the user and set it into db 
+
+userRouter.post("/start-verify", async function (req, res) {
+
+
+
+    const mobSchema = z.object({
+        mobile: z.string().regex(/^\d{10}$/, "Enter valid mobile number")
+    });
+
+    mobValidation = mobSchema.safeParse(req.body);
+
+    if (!mobValidation.success) {
+        return res.json({ message: mobValidation.error.format() })
+    }
+
+    try {
+        const accountSid = process.env.TWILIO_SID;
+        const authToken = process.env.TWILIO_TOKEN;
+        const client = require('twilio')(accountSid, authToken);
+
+        verification = await client.verify.v2.services(process.env.TWILIO_VERIFY)
+            .verifications
+            .create({ to: `+91${mobValidation.data.mobile}`, channel: 'sms' });
+
+        console.log(verification);
+
+        if (verification) {
+            return res.json({
+                message: "Otp sent!"
+            });
+        }
+
+    } catch (e) {
+        console.log(e);
+        return res.json(
+            e.status == 403 ? { message: "Mobile Number Not valid" } : { message: e.status }
+        )
+
+    }
+});
+
+
+userRouter.post("/check-verify", async function (req, res) {
+
+    const otpSchema = z.object({
+        otp: z.string().regex(/^\d{6}$/, "Enter valid Otp"),
+        mobile: z.string().regex(/^\d{10}$/, "Enter valid mobile number")
+    });
+
+    const otpValidation = otpSchema.safeParse(
+        req.body
+    );
+
+    if (!otpValidation.success) {
+        return res.json({
+            message: otpValidation.error.format()
+        });
+    }
+
+
+    try {
+
+        const accountSid = process.env.TWILIO_SID;
+        const authToken = process.env.TWILIO_TOKEN;
+        const client = require('twilio')(accountSid, authToken);
+
+        const verification_check = await client.verify.v2.services(process.env.TWILIO_VERIFY)
+            .verificationChecks
+            .create({ to: `+91${otpValidation.data.mobile}`, code: `${otpValidation.data.otp}` })
+
+        // console.log(verification_check);
+
+        if (verification_check.status === "approved") {
+            res.json({
+                message: "Verification Sucessfull"
+            });
+        } else {
+            res.json({
+                message: "Incorrect otp"
+            })
+        }
+
+
+    } catch (e) {
+        console.log(e);
+
+        res.json({
+            message: "Try again Some error occured"
+        });
+
+    }
+
+})
+*/
+
+
+
+
+
+
+
+
 
 
 
