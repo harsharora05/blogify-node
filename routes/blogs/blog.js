@@ -14,15 +14,56 @@ const streamifier = require('streamifier');
 const blogRouter = Router();
 
 
-blogRouter.get("/blogs", async function (req, res) {
-
-    const blogs = await postModel.find({});
-    return res.json({ blogs: blogs });
 
 
+blogRouter.get("/famousBlogs", async function (req, res) {
+    try {
+
+        const topBlogs = await postModel.find({}).sort({ "likes": -1 }).limit(10).populate("by", "username");
+
+
+        if (topBlogs) {
+            res.status(200).json({ "famousBlogs": topBlogs });
+        } else {
+            res.status(400).json({ message: "No famous Post Found" });
+        }
+    } catch (e) {
+        console.log(e);
+
+        res.status(500).json({ "message": "something went wrong" });
+    }
 });
 
+
+blogRouter.get("/blogs/:type", async function (req, res) {
+    try {
+        const type = req.params.type;
+
+
+        const blogs = await postModel.find({ "category": type }).populate("by", "username");;
+
+        if (blogs) {
+            res.status(200).json({ "blogs": blogs })
+        } else {
+            res.status(400).json({ "message": `No post found for ${type}` });
+        }
+
+
+    } catch (e) {
+        res.status(500).json({ "messsage": "something went wrong" });
+    }
+});
+
+
+
 blogRouter.use(isUser);
+
+blogRouter.get("/blogs", async function (req, res) {
+
+    const blogs = await postModel.find({}).sort({ createdAt: -1 }).populate("by", "username");
+    return res.status(200).json({ "blogs": blogs });
+
+});
 
 
 blogRouter.post("/blog", upload.single('image'), async function (req, res) {
@@ -35,44 +76,58 @@ blogRouter.post("/blog", upload.single('image'), async function (req, res) {
     const postSchema = z.object({
         title: z.string().max(70, "Title length should not be greater than 70 chars"),
         content: z.string().min(50, "content too short").max(1000, "content too long"),
+        category: z.string(),
+
     });
 
-    // console.log(req.body);
-    // console.log(req.file);
 
     try {
+
         const validatedData = postSchema.safeParse(req.body);
 
+
+
         if (!validatedData.success) {
-            return res.json(validatedData.error.format());
+            return res.status(400).json({ message: validatedData.error.errors.map((e) => e.message) });
         }
+
 
 
         if (!req.file) {
-            return res.status(400).json({ error: 'No Image uploaded' });
+            return res.status(400).json({ message: 'No Image uploaded' });
         }
-        const allowedTypes = ['image/jpeg', 'image/png'];
+
+        console.log(req.file);
+
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/octet-stream'];
         if (allowedTypes.includes(req.file.mimetype)) {
+            console.log(true);
+
             let stream = cloudinary.uploader.upload_stream(
                 { folder: 'Blogify' }, // Optional folder in Cloudinary
                 async (error, result) => {
-                    if (error) return res.status(500).json({ error: error.message });
+                    if (error) return res.status(400).json({ message: error.message });
 
                     try {
+
 
                         const post = await postModel.create({
                             title: validatedData.data.title,
                             by: req.id,
                             content: validatedData.data.content,
-                            image: result.secure_url
+                            image: result.secure_url,
+                            category: validatedData.data.category
                         });
 
-                        return res.json({ post: post });
+
+
+                        return res.status(200).json({ message: "Post Uploaded Successfully", "post": post });
 
                     } catch (e) {
 
                         const key = Object.keys(e.errorResponse.keyValue)
-                        return res.json({ message: `A post with same ${key} already exits ` });
+                        return res.status(400).json({ message: `A post with same ${key} already exits ` });
 
                     }
 
@@ -91,6 +146,8 @@ blogRouter.post("/blog", upload.single('image'), async function (req, res) {
 
 
     } catch (err) {
+        console.log(err);
+
         res.status(500).json({ error: err });
     }
 
@@ -190,7 +247,6 @@ blogRouter.put("/blog/:id", upload.single('image'), async function (req, res) {
 
 });
 
-
 blogRouter.delete("/blog/:id", async function (req, res) {
 
     const id = req.params.id;
@@ -216,5 +272,9 @@ blogRouter.delete("/blog/:id", async function (req, res) {
 
 
 });
+
+
+
+
 
 module.exports = blogRouter;

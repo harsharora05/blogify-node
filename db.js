@@ -3,22 +3,30 @@ const { Schema, Types } = mongoose;
 
 
 const userSchema = new Schema({
-
     name: { type: String },
     username: { type: String, unique: true },
-    //mobile: { type: String, unique: true, maxLength: 10, minLength: 10 },
     email: { type: String, unique: true },
     password: { type: String },
 }, { timestamps: true });
 
+const categories = ["Sports",
+    "Business",
+    "Entertainment",
+    "Life",
+    "Food",
+    "Others"];
 
 const postSchema = new Schema({
     title: { type: String, unique: true, required: true, maxLength: 70 },
     by: { type: Types.ObjectId, ref: 'users', required: true },
     content: { type: String, minLength: 50, maxLength: 1000, required: true },
+    category: { type: String, enum: categories },
     image: { type: String, required: true },
     likes: { type: Number, default: 0 }
 }, { timestamps: true });
+
+
+
 
 const commentSchema = new Schema({
     by: { type: Types.ObjectId, required: true, ref: 'users' },
@@ -28,13 +36,14 @@ const commentSchema = new Schema({
     reply: [{ type: Types.ObjectId, ref: 'comments' }]
 }, { timestamps: true });
 
-commentSchema.pre("find", function (next) {
-    this.populate({
-        path: "reply",
-        populate: { path: "by" }
-    })
-    next()
-});
+// commentSchema.pre("find", function (next) {
+//     this.populate({
+//         path: "reply",
+//         populate: { path: "by" }
+//     })
+//     next()
+// });
+
 
 
 const userModel = mongoose.model('users', userSchema);

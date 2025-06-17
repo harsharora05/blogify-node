@@ -12,7 +12,7 @@ async function isUser(req, res, next) {
     try {
         jwt.verify(token, process.env.User_JWT, async function (err, decoded) {
             if (err) {
-                return res.json({ message: " invalid token" });
+                return res.json({ message: "invalid token" });
             } else {
                 const user = await userModel.findOne({ email: decoded.email });
                 if (!user) {

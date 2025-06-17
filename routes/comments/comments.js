@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const isUser = require("../../middlewares/userMiddleware.js");
-const { z, object } = require("zod");
+const { z } = require("zod");
 const { commentModel } = require("../../db.js");
 const Types = require("mongoose");
 
@@ -18,11 +18,18 @@ Comment.use(isUser);
 Comment.get('/:pid', async function (req, res) {
 
     // give all post comments
-    let postId = req.params.pid;
+    try {
+        let postId = req.params.pid;
 
-    const comments = await commentModel.find({ post: postId, parentComment: null },);
+        const comments = await commentModel.find({ post: postId, parentComment: null },).populate('reply').populate('by');
 
-    return res.json({ comments });
+        return res.json({ comments });
+    } catch (e) {
+
+        console.log(e);
+
+    }
+
 
 
 });
@@ -36,7 +43,7 @@ Comment.post('/:pid', async function (req, res) {
         const pid = req.params.pid;
         const commentSchema = z.object({
             content: z.string().min(10, "Too Short").max(300, "Too Long")
-        })
+        });
 
         const validatedData = commentSchema.safeParse(req.body);
 
@@ -120,12 +127,69 @@ Comment.post('/:cid/reply/:pid', async function (req, res) {
 
 
 
-Comment.put('/:id', function (req, res) {
+Comment.put('/:cid', async function (req, res) {
+
+    const cid = req.params.cid;
+
+    try {
+
+        const newCommentSchema = z.object({
+            content: z.string().min(10, "Too Short").max(300, "Too Long")
+        });
+
+
+
+        const CommentValidation = newCommentSchema.safeParse(req.body);
+
+        if (!CommentValidation.success) {
+            res.json({
+                message: CommentValidation.error.format()
+            })
+        }
+
+        const oldComment = await commentModel.findOneAndUpdate({ _id: cid, by: req.id }, {
+            content: CommentValidation.data.content
+        });
+
+        if (!oldComment) {
+            return res.json({
+                message: "you can't update comment...Try again!!"
+            });
+        } else {
+            return res.json({
+                message: "comment updated"
+            })
+        }
+
+
+
+
+    } catch (e) {
+        console.log(e)
+    }
+
+
 
 });
 
 
-Comment.delete('/:id', function (req, res) {
+Comment.delete('/:cid', async function (req, res) {
+
+    const cid = req.params.cid;
+
+
+    const result = commentModel.deleteMany({
+        $or: [
+            { _id: cid },
+            { parentComment: cid }
+        ]
+    });
+
+    console.log(result);
+
+
+
+
 
 });
 
