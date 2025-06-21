@@ -3,7 +3,9 @@ const { userModel } = require("../../db.js");
 const jwt = require("jsonwebtoken");
 const { z } = require("zod");
 const bcrypt = require("bcrypt");
-const passport = require("passport");
+const isUser = require("../../middlewares/userMiddleware.js");
+// const { use } = require("passport");
+// const passport = require("passport");
 
 
 
@@ -107,6 +109,66 @@ userRouter.post("/signIn", async function (req, res) {
         console.log(e);
         res.status(500);
     }
+
+
+
+
+});
+
+userRouter.use(isUser);
+
+userRouter.post('/changePassword', async function (req, res) {
+
+    const userId = req.id;
+    const passSchema = z.object({
+        OldPassword: z.string(),
+        NewPassword: z.string().min(8, "Minimum Length should be 8").regex(/[A-Z]/, "should contain one capital letter").regex(/[0-9]/, "Should contain one numeric letter").regex(/[@#$%^&*]/, "should contain 1 special character"),
+        ConfirmNewPassword: z.string().min(8, "Minimum Length should be 8").regex(/[A-Z]/, "should contain one capital letter").regex(/[0-9]/, "Should contain one numeric letter").regex(/[@#$%^&*]/, "should contain 1 special character")
+    });
+
+    try {
+
+
+
+        const passValidation = passSchema.safeParse(req.body);
+
+        if (!passValidation.success) {
+            return res.status(400).json({ "message": passValidation.error.issues[0].message });
+        }
+
+        if (passValidation.data.NewPassword !== passValidation.data.ConfirmNewPassword) {
+            return res.status(400).json({ "message": "New Passwords Don't Match" })
+        }
+
+
+        const user = await userModel.findOne({ _id: userId });
+
+        const oldPassCompare = await bcrypt.compare(passValidation.data.OldPassword, user.password);
+
+        if (oldPassCompare) {
+            const newOldPassCompare = await bcrypt.compare(passValidation.data.NewPassword, user.password);
+            if (!newOldPassCompare) {
+
+
+                const hashedPass = await bcrypt.hash(passValidation.data.NewPassword, 5)
+                const updatePass = await userModel.findByIdAndUpdate(userId, { password: hashedPass });
+                if (updatePass) {
+                    return res.status(200).json({ "message": "Password change Successfully" })
+                }
+            } else {
+                res.status(400).json({ "message": "New & Old Password Cant't Be Same" });
+            }
+
+        } else {
+            res.status(400).json({ "message": "Old Password Incorrect" });
+        }
+
+    } catch (e) {
+        res.status(500).json({ "message": "Something Went Wrong" });
+    }
+
+
+
 
 
 
