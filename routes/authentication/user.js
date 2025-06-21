@@ -21,8 +21,8 @@ userRouter.post("/signUp", async function (req, res) {
     console.log(req.body);
 
     const userSchema = z.object({
-        name: z.string().min(4, "Minimum length of username should be 4").max(25, "Maximum length should be 25"),
-        username: z.string(),
+        name: z.string(),
+        username: z.string().min(4, "Minimum length should be 4").max(25, "Maximum length should be 25"),
         email: z.string().email("not a valid email"),
         password: z.string().min(8, "Minimum Length should be 8").regex(/[A-Z]/, "should contain one capital letter").regex(/[0-9]/, "Should contain one numeric letter").regex(/[@#$%^&*]/, "should contain 1 special character"),
         confirmPassword: z.string()
@@ -121,9 +121,9 @@ userRouter.post('/changePassword', async function (req, res) {
 
     const userId = req.id;
     const passSchema = z.object({
-        OldPassword: z.string(),
-        NewPassword: z.string().min(8, "Minimum Length should be 8").regex(/[A-Z]/, "should contain one capital letter").regex(/[0-9]/, "Should contain one numeric letter").regex(/[@#$%^&*]/, "should contain 1 special character"),
-        ConfirmNewPassword: z.string().min(8, "Minimum Length should be 8").regex(/[A-Z]/, "should contain one capital letter").regex(/[0-9]/, "Should contain one numeric letter").regex(/[@#$%^&*]/, "should contain 1 special character")
+        oldPassword: z.string(),
+        newPassword: z.string().min(8, "Minimum Length should be 8").regex(/[A-Z]/, "should contain one capital letter").regex(/[0-9]/, "Should contain one numeric letter").regex(/[@#$%^&*]/, "should contain 1 special character"),
+        confirmNewPassword: z.string().min(8, "Minimum Length should be 8").regex(/[A-Z]/, "should contain one capital letter").regex(/[0-9]/, "Should contain one numeric letter").regex(/[@#$%^&*]/, "should contain 1 special character")
     });
 
     try {
@@ -136,21 +136,21 @@ userRouter.post('/changePassword', async function (req, res) {
             return res.status(400).json({ "message": passValidation.error.issues[0].message });
         }
 
-        if (passValidation.data.NewPassword !== passValidation.data.ConfirmNewPassword) {
+        if (passValidation.data.newPassword !== passValidation.data.confirmNewPassword) {
             return res.status(400).json({ "message": "New Passwords Don't Match" })
         }
 
 
         const user = await userModel.findOne({ _id: userId });
 
-        const oldPassCompare = await bcrypt.compare(passValidation.data.OldPassword, user.password);
+        const oldPassCompare = await bcrypt.compare(passValidation.data.oldPassword, user.password);
 
         if (oldPassCompare) {
-            const newOldPassCompare = await bcrypt.compare(passValidation.data.NewPassword, user.password);
+            const newOldPassCompare = await bcrypt.compare(passValidation.data.newPassword, user.password);
             if (!newOldPassCompare) {
 
 
-                const hashedPass = await bcrypt.hash(passValidation.data.NewPassword, 5)
+                const hashedPass = await bcrypt.hash(passValidation.data.newPassword, 5)
                 const updatePass = await userModel.findByIdAndUpdate(userId, { password: hashedPass });
                 if (updatePass) {
                     return res.status(200).json({ "message": "Password change Successfully" })
@@ -164,6 +164,7 @@ userRouter.post('/changePassword', async function (req, res) {
         }
 
     } catch (e) {
+
         res.status(500).json({ "message": "Something Went Wrong" });
     }
 

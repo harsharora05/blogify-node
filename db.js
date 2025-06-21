@@ -44,10 +44,18 @@ const commentSchema = new Schema({
 //     next()
 // });
 
+const favPostSchema = new Schema({
+    likedBy: { type: Types.ObjectId, required: true, ref: 'users' },
+    post: { type: Types.ObjectId, required: true, ref: 'posts' }
+});
+
+favPostSchema.index({ likedBy: 1, post: 1 }, { unique: true });
+
 
 
 const userModel = mongoose.model('users', userSchema);
 const postModel = mongoose.model('posts', postSchema);
 const commentModel = mongoose.model('comments', commentSchema);
+const FavPostModel = mongoose.model('favPosts', favPostSchema);
 
-module.exports = { userModel, postModel, commentModel };
+module.exports = { userModel, postModel, commentModel, FavPostModel };

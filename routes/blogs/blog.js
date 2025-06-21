@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const isUser = require("../../middlewares/userMiddleware");
-const { postModel } = require("../../db.js");
+const { postModel, FavPostModel } = require("../../db.js");
 const { z, object } = require("zod");
 const multer = require("multer");
 const storage = multer.memoryStorage();
@@ -97,13 +97,9 @@ blogRouter.post("/blog", upload.single('image'), async function (req, res) {
             return res.status(400).json({ message: 'No Image uploaded' });
         }
 
-        console.log(req.file);
-
 
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/octet-stream'];
         if (allowedTypes.includes(req.file.mimetype)) {
-            console.log(true);
-
             let stream = cloudinary.uploader.upload_stream(
                 { folder: 'Blogify' }, // Optional folder in Cloudinary
                 async (error, result) => {
@@ -268,6 +264,75 @@ blogRouter.delete("/blog/:id", async function (req, res) {
         console.log(e);
 
         return res.json({ message: "can't delete post!! Try Again" });
+    }
+
+
+});
+
+
+blogRouter.post("/favBlog/:pid", async function (req, res) {
+    const postId = req.params.pid;
+    const userId = req.id;
+
+    try {
+        const favPost = await FavPostModel.create({
+            likedBy: userId,
+            post: postId
+        });
+
+        if (favPost) {
+            res.status(200).json({});
+        } else {
+            res.status(400).json({});
+        }
+
+    } catch (e) {
+        res.status(500).json({});
+    }
+
+
+});
+
+
+blogRouter.delete("/favBlog/:pid", async function (req, res) {
+    const postId = req.params.pid;
+    const userId = req.id;
+
+    try {
+        const removeFavPost = await FavPostModel.findOneAndDelete({
+            likedBy: userId,
+            post: postId
+        });
+
+        console.log(removeFavPost);
+        if (removeFavPost) {
+            res.status(200).json({});
+        } else {
+            res.status(400).json({});
+        }
+
+    } catch (e) {
+        res.status(500).json({});
+    }
+});
+
+
+blogRouter.get("/favBlogs", async function (req, res) {
+    const userId = req.id;
+
+    try {
+        const favPost = await FavPostModel.find({
+            likedBy: userId,
+        }).populate("likedBy", "username").populate("post");
+
+        if (favPost) {
+            res.status(200).json({ "favPost": favPost });
+        } else {
+            res.status(400).json({});
+        }
+
+    } catch (e) {
+        res.status(500).json({});
     }
 
 
