@@ -323,7 +323,7 @@ blogRouter.get("/favBlogs", async function (req, res) {
     try {
         const favPost = await FavPostModel.find({
             likedBy: userId,
-        }).populate("likedBy", "username").populate("post");
+        }).populate("likedBy", "username").populate({ path: "post", populate: { path: "by", select: "username" } })
 
         if (favPost) {
             res.status(200).json({ "favPost": favPost });
